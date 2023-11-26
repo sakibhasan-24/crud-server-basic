@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
   "mongodb+srv://sakibhasan7724:MfwhsMgoK2E6zLvf@mern-learning.cleqqgb.mongodb.net/?retryWrites=true&w=majority";
 
@@ -14,6 +14,7 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+// middleware
 app.use(cors());
 app.use(express.json());
 async function serverRunning() {
@@ -22,6 +23,11 @@ async function serverRunning() {
   try {
     await client.connect();
     // read data===get
+    app.get("/users", async (req, res) => {
+      const cursor = userCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
     // create data
     app.post("/users", async (req, res) => {
       const users = req.body;
@@ -29,26 +35,20 @@ async function serverRunning() {
       const result = await userCollection.insertOne(users);
       res.send(result);
     });
+    // delete data
+
+    app.delete("/users/:id", async function (req, res) {
+      const { id } = req.params;
+      // console.log(`Delete record with id ${id}`);
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
   } catch (error) {
     console.log(error);
   }
 }
 serverRunning().catch((e) => console.log(e));
-// async function run() {
-//   try {
-//     // Connect the client to the server	(optional starting in v4.7)
-//     await client.connect();
-//     // Send a ping to confirm a successful connection
-//     await client.db("admin").command({ ping: 1 });
-//     console.log(
-//       "Pinged your deployment. You successfully connected to MongoDB!"
-//     );
-//   } finally {
-//     // Ensures that the client will close when you finish/error
-//     await client.close();
-//   }
-// }
-// run().catch(console.dir);
 
 app.get("/", (req, res) => res.send("Hello Server"));
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
